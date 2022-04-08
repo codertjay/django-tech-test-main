@@ -3,7 +3,7 @@ from marshmallow import fields
 from marshmallow import Schema
 from marshmallow.decorators import post_load
 
-from regions.models import Region
+from techtest.regions.models import Region
 
 
 class RegionSchema(Schema):

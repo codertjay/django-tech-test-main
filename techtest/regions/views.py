@@ -3,9 +3,9 @@ import json
 from marshmallow import ValidationError
 from django.views.generic import View
 
-from regions.models import Region
-from regions.schemas import RegionSchema
-from techtest.utils import json_response
+from techtest.regions.models import Region
+from techtest.regions.schemas import RegionSchema
+from techtest.utils import json_response, verify_user_token
 
 
 class RegionsListView(View):
@@ -14,6 +14,9 @@ class RegionsListView(View):
 
     def post(self, request, *args, **kwargs):
         try:
+            # token login required
+            if not verify_user_token(request):
+                return json_response({"message": "Unauthorized"}, status=401)
             region = RegionSchema().load(json.loads(request.body))
         except ValidationError as e:
             return json_response(e.messages, 400)
@@ -36,11 +39,18 @@ class RegionView(View):
 
     def put(self, request, *args, **kwargs):
         try:
+            # token login required
+            if not verify_user_token(request):
+                return json_response({"message": "Unauthorized"}, status=401)
+
             self.region = RegionSchema().load(self.data)
         except ValidationError as e:
             return json_response(e.messages, 400)
         return json_response(RegionSchema().dump(self.region))
 
     def delete(self, request, *args, **kwargs):
+        # token login required
+        if not verify_user_token(request):
+            return json_response({"message": "Unauthorized"}, status=401)
         self.region.delete()
         return json_response()

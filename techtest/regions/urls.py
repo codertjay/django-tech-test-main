@@ -1,6 +1,6 @@
 from django.urls import path
 
-from regions.views import RegionsListView, RegionView
+from techtest.regions.views import RegionsListView, RegionView
 
 app_name = 'regions'
 urlpatterns = [

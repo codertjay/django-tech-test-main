@@ -3,11 +3,11 @@ from marshmallow import fields
 from marshmallow import Schema
 from marshmallow.decorators import post_load
 
-from articles.models import Article
-from authors.models import Author
-from authors.schemas import AuthorSchema
-from regions.models import Region
-from regions.schemas import RegionSchema
+from techtest.articles.models import Article
+from techtest.authors.models import Author
+from techtest.authors.schemas import AuthorSchema
+from techtest.regions.models import Region
+from techtest.regions.schemas import RegionSchema
 
 
 class ArticleSchema(Schema):
@@ -21,7 +21,8 @@ class ArticleSchema(Schema):
         required=False, serialize="get_regions", deserialize="load_regions"
     )
     author = fields.Method(
-        required=True, serialize="get_author", deserialize="load_author"
+        required=False, serialize="get_author",
+        deserialize="load_author"
     )
 
     def get_regions(self, article):
@@ -34,23 +35,28 @@ class ArticleSchema(Schema):
         ]
 
     def get_author(self, article):
-        return AuthorSchema().dump(article.regions.all(), many=True)
+        try:
+            print('aa', article.author)
+            return AuthorSchema().dump(article.author)
+        except:
+            return AuthorSchema()
 
-    def load_author(self, authors):
-        return [
-            Author.objects.get_or_create(id=author.pop("id", None), defaults=author)[0]
-            for author in authors
-        ]
+    def load_author(self, author):
+        print('author', author)
+        return Author.objects.get_or_create(id=author.pop("id", None), defaults=author)
 
     @post_load
     def update_or_create(self, data, *args, **kwargs):
+        print('data', data)
         regions = data.pop("regions", None)
         author = data.pop("author", None)
         article, _ = Article.objects.update_or_create(
             id=data.pop("id", None), defaults=data
         )
+
         if isinstance(regions, list):
             article.regions.set(regions)
-        if isinstance(author, list):
-            article.author.set(author)
+        if isinstance(author, tuple):
+            article.author = author[0]
+            article.save()
         return article

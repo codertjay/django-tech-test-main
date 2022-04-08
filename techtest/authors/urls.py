@@ -1,6 +1,6 @@
 from django.urls import path
 
-from authors.views import AuthorListView, AuthorView
+from techtest.authors.views import AuthorListView, AuthorView
 
 app_name = 'author'
 urlpatterns = [

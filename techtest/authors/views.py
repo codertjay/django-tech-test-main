@@ -2,9 +2,9 @@ import json
 
 from marshmallow import ValidationError
 
-from authors.models import Author
-from authors.schemas import AuthorSchema
-from techtest.utils import json_response
+from techtest.authors.models import Author
+from techtest.authors.schemas import AuthorSchema
+from techtest.utils import json_response, verify_user_token
 
 from django.views.generic import View
 
@@ -15,7 +15,10 @@ class AuthorListView(View):
 
     def post(self, request, *args, **kwargs):
         try:
-            print(request.headers)
+            # token login required
+            if not verify_user_token(request):
+                return json_response({"message": "Unauthorized"}, status=401)
+
             author = AuthorSchema().load(json.loads(request.body))
         except ValidationError as e:
             return json_response(e.messages, 400)
@@ -37,11 +40,19 @@ class AuthorView(View):
 
     def put(self, request, *args, **kwargs):
         try:
+            # token login required
+            if not verify_user_token(request):
+                return json_response({"message": "Unauthorized"}, status=401)
+
             self.author = AuthorSchema().load(self.data)
         except ValidationError as e:
             return json_response(e.messages, 400)
         return json_response(AuthorSchema().dump(self.author))
 
     def delete(self, request, *args, **kwargs):
+        # token login required
+        if not verify_user_token(request):
+            return json_response({"message": "Unauthorized"}, status=401)
+
         self.author.delete()
         return json_response()

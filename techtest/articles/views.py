@@ -3,9 +3,9 @@ import json
 from marshmallow import ValidationError
 from django.views.generic import View
 
-from articles.models import Article
-from articles.schemas import ArticleSchema
-from techtest.utils import json_response
+from techtest.articles.models import Article
+from techtest.articles.schemas import ArticleSchema
+from techtest.utils import json_response, verify_user_token
 
 
 class ArticlesListView(View):
@@ -14,9 +14,15 @@ class ArticlesListView(View):
 
     def post(self, request, *args, **kwargs):
         try:
+            # token login required
+            if not verify_user_token(request):
+                return json_response({"message": "Unauthorized"}, status=401)
+
             article = ArticleSchema().load(json.loads(request.body))
         except ValidationError as e:
             return json_response(e.messages, 400)
+        except Exception as e:
+            return json_response({"message": "An error occurred", "error": str(e)}, 400)
         return json_response(ArticleSchema().dump(article), 201)
 
 
@@ -34,11 +40,18 @@ class ArticleView(View):
 
     def put(self, request, *args, **kwargs):
         try:
+            # token login required
+            if not verify_user_token(request):
+                return json_response({"message": "Unauthorized"}, status=401)
+
             self.article = ArticleSchema().load(self.data)
         except ValidationError as e:
             return json_response(e.messages, 400)
         return json_response(ArticleSchema().dump(self.article))
 
     def delete(self, request, *args, **kwargs):
+        # token login required
+        if not verify_user_token(request):
+            return json_response({"message": "Unauthorized"}, status=401)
         self.article.delete()
-        return json_response()
+        return json_response({'message': 'Successfully deleted article'}, status=200)
